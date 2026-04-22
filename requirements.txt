@@ -2,5 +2,3 @@ aiohttp
 pyjwt
 qrcode
 pillow
-flask
-flask-cross
