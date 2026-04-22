@@ -73,54 +73,25 @@
     /* QR CARD */
     .qr-card {
       width: 340px;
-      margin: 25px auto;
+      margin: 20px auto;
       padding: 20px;
-      border-radius: 18px;
+      border-radius: 16px;
       background: linear-gradient(135deg, #7b1fa2, #512da8);
       display: none;
       text-align: center;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.4);
     }
 
-    /* 3D LOGO */
-    .logo-box {
-      background: white;
-      display: inline-block;
-      padding: 12px 18px;
-      border-radius: 18px;
-      box-shadow:
-        0 12px 25px rgba(0,0,0,0.35),
-        inset 0 2px 6px rgba(255,255,255,0.6);
-      transform: translateY(-35px);
+    .qr-card img {
+      width: 180px;
+      margin-top: 10px;
+      border-radius: 10px;
     }
 
-    .logo-box img {
-      width: 85px;
-    }
-
-    /* 3D QR */
-    .qr-box {
-      background: white;
-      padding: 15px;
-      border-radius: 18px;
-      display: inline-block;
-      box-shadow:
-        0 18px 35px rgba(0,0,0,0.4),
-        inset 0 3px 10px rgba(0,0,0,0.1);
-      transform: perspective(800px) rotateX(6deg);
-    }
-
-    .qr-box img {
-      width: 190px;
-      filter: drop-shadow(0px 10px 10px rgba(0,0,0,0.25));
-    }
-
-    /* ROOM TEXT */
-    .room-text {
-      margin-top: 18px;
-      font-size: 22px;
-      font-weight: bold;
-      letter-spacing: 1px;
+    .qr-meta {
+      text-align: left;
+      font-size: 13px;
+      margin-top: 10px;
+      line-height: 1.5;
     }
 
     .download-btn {
@@ -136,7 +107,9 @@
 
   <!-- HEADER -->
   <div class="header">
+    <!-- LOGO (PAGE) -->
     <img id="logoImg" alt="QRswoopAccess Logo">
+
     <h1>QRswoopAccess</h1>
     <p>Smart Hotel QR Access System</p>
   </div>
@@ -145,6 +118,10 @@
   <div class="form-card">
 
     <input id="room" placeholder="Room Number (e.g. 512)" />
+    <input id="name" placeholder="Guest Name (e.g. Ahmed Alfahdi)" />
+    <input id="guest_id" placeholder="Guest ID (e.g. A8392)" />
+    <input id="checkin" type="datetime-local" />
+    <input id="checkout" type="datetime-local" />
 
     <button onclick="generateQR()">Generate QR Card</button>
 
@@ -153,20 +130,14 @@
   <!-- QR CARD -->
   <div id="qrCard" class="qr-card">
 
-    <!-- 3D LOGO -->
-    <div class="logo-box">
-      <img id="cardLogo"/>
-    </div>
+    <!-- LOGO INSIDE CARD (IMPORTANT FOR PDF) -->
+    <img id="cardLogo" style="width:70px; margin-bottom:10px;" />
 
-    <!-- 3D QR -->
-    <div class="qr-box">
-      <img id="qrImg"/>
-    </div>
+    <h3>?? Hotel Access Card</h3>
 
-    <!-- ROOM ONLY -->
-    <div class="room-text">
-      Room <span id="roomText"></span>
-    </div>
+    <img id="qrImg"/>
+
+    <div class="qr-meta" id="meta"></div>
 
   </div>
 
@@ -176,21 +147,31 @@
 
 <script>
 
-const logoPath = "/static/logo.png";
+let logoPath = "/static/logo.png";
 
-/* SET LOGO */
+/* ? FIX: use real static file (NOT base64) */
 document.getElementById("logoImg").src = logoPath;
 document.getElementById("cardLogo").src = logoPath;
 
 function generateQR() {
 
     const payload = {
-        room: room.value
+        room: room.value,
+        name: name.value,
+        guest_id: guest_id.value,
+        checkin: checkin.value,
+        checkout: checkout.value
     };
 
     qrImg.src = "/generate_qr?data=" + encodeURIComponent(JSON.stringify(payload));
 
-    roomText.innerText = payload.room;
+    meta.innerHTML = `
+        <b>Room:</b> ${payload.room}<br>
+        <b>Name:</b> ${payload.name}<br>
+        <b>Guest ID:</b> ${payload.guest_id}<br>
+        <b>Check-in:</b> ${payload.checkin}<br>
+        <b>Check-out:</b> ${payload.checkout}
+    `;
 
     qrCard.style.display = "block";
 }
@@ -199,11 +180,11 @@ async function downloadPDF() {
 
     const card = document.getElementById("qrCard");
 
-    /* ensure images loaded */
+    /* ? WAIT FOR IMAGES TO LOAD (fix PDF missing logo) */
     const images = card.getElementsByTagName("img");
 
     await Promise.all([...images].map(img => {
-        if (img.complete) return;
+        if (img.complete) return Promise.resolve();
         return new Promise(resolve => {
             img.onload = img.onerror = resolve;
         });
@@ -211,7 +192,7 @@ async function downloadPDF() {
 
     const canvas = await html2canvas(card, {
         useCORS: true,
-        scale: 2
+        allowTaint: false
     });
 
     const imgData = canvas.toDataURL("image/png");
