@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Smart QR Admin Panel</title>
+
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #0f172a;
+      color: white;
+      text-align: center;
+    }
+
+    h2 {
+      margin-top: 20px;
+    }
+
+    .scanner {
+      width: 350px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #1e293b;
+      border-radius: 12px;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 20px;
+    }
+
+    .ok { color: lime; }
+    .fail { color: red; }
+  </style>
+</head>
+
+<body>
+
+<h2>?? Smart QR Access Admin</h2>
+
+<div class="scanner">
+  <div id="reader"></div>
+</div>
+
+<div id="result"></div>
+
+<script>
+
+const BACKEND = window.location.origin;
+
+function onScanSuccess(decodedText) {
+
+  fetch(BACKEND + "/api/validate", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ token: decodedText })
+  })
+  .then(res => res.json())
+  .then(data => {
+
+    if(data.access === "GRANTED"){
+      document.getElementById("result").innerHTML =
+        `<div class="ok">? ACCESS GRANTED<br>Room ${data.room}<br>Guest ${data.guest}</div>`;
+    } else {
+      document.getElementById("result").innerHTML =
+        `<div class="fail">? ACCESS DENIED</div>`;
+    }
+
+  });
+
+}
+
+const qr = new Html5Qrcode("reader");
+
+Html5Qrcode.getCameras().then(cameras => {
+
+  qr.start(
+    cameras[0].id,
+    { fps: 10, qrbox: 250 },
+    onScanSuccess
+  );
+
+});
+
+</script>
+
+</body>
+</html>

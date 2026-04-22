@@ -82,7 +82,7 @@ button {
     inset 0 2px 10px rgba(255,255,255,0.2);
 }
 
-/* STACK */
+/* STACK LAYOUT */
 .qr-stack {
   display: flex;
   flex-direction: column;
@@ -185,16 +185,10 @@ button {
 
 <script>
 
-const BACKEND = "https://realaccess.onrender.com";
-
-/* LOGO */
 const logoPath = "/static/logo.png";
 cardLogo.src = logoPath;
 
-/* =========================
-   CONNECTED QR GENERATION
-========================= */
-async function generateQR() {
+function generateQR() {
 
   const payload = {
     room: room.value,
@@ -204,38 +198,12 @@ async function generateQR() {
     checkout: checkout.value
   };
 
-  try {
+  qrImg.src = "/generate_qr?data=" + encodeURIComponent(JSON.stringify(payload));
+  roomText.innerText = payload.room;
 
-    const res = await fetch(BACKEND + "/api/checkin", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    const data = await res.json();
-
-    if (!data.qr_token) {
-      alert("Failed to generate QR");
-      return;
-    }
-
-    qrImg.src =
-      "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=" +
-      encodeURIComponent(data.qr_token);
-
-    roomText.innerText = payload.room;
-
-    qrCard.style.display = "block";
-
-  } catch (err) {
-    console.error(err);
-    alert("Backend connection failed");
-  }
+  qrCard.style.display = "block";
 }
 
-/* =========================
-   PDF DOWNLOAD
-========================= */
 async function downloadPDF() {
 
   const card = document.getElementById("qrCard");
