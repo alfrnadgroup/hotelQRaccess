@@ -41,7 +41,6 @@
     .header h1 {
       margin: 0;
       font-size: 28px;
-      letter-spacing: 1px;
     }
 
     /* FORM */
@@ -98,7 +97,7 @@
       width: 85px;
     }
 
-    /* 3D QR */
+    /* QR 3D */
     .qr-box {
       background: white;
       padding: 15px;
@@ -115,10 +114,10 @@
       filter: drop-shadow(0px 10px 10px rgba(0,0,0,0.25));
     }
 
-    /* ROOM TEXT */
+    /* ONLY ROOM */
     .room-text {
       margin-top: 18px;
-      font-size: 22px;
+      font-size: 24px;
       font-weight: bold;
       letter-spacing: 1px;
     }
@@ -136,7 +135,7 @@
 
   <!-- HEADER -->
   <div class="header">
-    <img id="logoImg" alt="QRswoopAccess Logo">
+    <img id="logoImg">
     <h1>QRswoopAccess</h1>
     <p>Smart Hotel QR Access System</p>
   </div>
@@ -145,25 +144,29 @@
   <div class="form-card">
 
     <input id="room" placeholder="Room Number (e.g. 512)" />
+    <input id="name" placeholder="Guest Name" />
+    <input id="guest_id" placeholder="Guest ID" />
+    <input id="checkin" type="datetime-local" />
+    <input id="checkout" type="datetime-local" />
 
     <button onclick="generateQR()">Generate QR Card</button>
 
   </div>
 
-  <!-- QR CARD -->
+  <!-- QR CARD (CLEAN DISPLAY ONLY) -->
   <div id="qrCard" class="qr-card">
 
     <!-- 3D LOGO -->
     <div class="logo-box">
-      <img id="cardLogo"/>
+      <img id="cardLogo">
     </div>
 
-    <!-- 3D QR -->
+    <!-- QR -->
     <div class="qr-box">
-      <img id="qrImg"/>
+      <img id="qrImg">
     </div>
 
-    <!-- ROOM ONLY -->
+    <!-- ONLY ROOM DISPLAY -->
     <div class="room-text">
       Room <span id="roomText"></span>
     </div>
@@ -178,18 +181,24 @@
 
 const logoPath = "/static/logo.png";
 
-/* SET LOGO */
+/* LOGO */
 document.getElementById("logoImg").src = logoPath;
 document.getElementById("cardLogo").src = logoPath;
 
 function generateQR() {
 
     const payload = {
-        room: room.value
+        room: room.value,
+        name: name.value,
+        guest_id: guest_id.value,
+        checkin: checkin.value,
+        checkout: checkout.value
     };
 
+    /* FULL DATA INSIDE QR */
     qrImg.src = "/generate_qr?data=" + encodeURIComponent(JSON.stringify(payload));
 
+    /* ONLY ROOM DISPLAYED */
     roomText.innerText = payload.room;
 
     qrCard.style.display = "block";
@@ -199,7 +208,6 @@ async function downloadPDF() {
 
     const card = document.getElementById("qrCard");
 
-    /* ensure images loaded */
     const images = card.getElementsByTagName("img");
 
     await Promise.all([...images].map(img => {
