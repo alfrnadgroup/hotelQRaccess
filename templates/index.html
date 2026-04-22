@@ -41,6 +41,7 @@
     .header h1 {
       margin: 0;
       font-size: 28px;
+      letter-spacing: 1px;
     }
 
     /* FORM */
@@ -72,9 +73,9 @@
     /* QR CARD */
     .qr-card {
       width: 340px;
-      margin: 25px auto;
+      margin: 20px auto;
       padding: 20px;
-      border-radius: 18px;
+      border-radius: 16px;
       background: linear-gradient(135deg, #7b1fa2, #512da8);
       display: none;
       text-align: center;
@@ -140,7 +141,7 @@
     <p>Smart Hotel QR Access System</p>
   </div>
 
-  <!-- FORM -->
+  <!-- FORM (ALL DATA STILL COLLECTED) -->
   <div class="form-card">
 
     <input id="room" placeholder="Room Number (e.g. 512)" />
@@ -166,7 +167,7 @@
       <img id="qrImg">
     </div>
 
-    <!-- ONLY ROOM DISPLAY -->
+    <!-- ONLY ROOM SHOWN -->
     <div class="room-text">
       Room <span id="roomText"></span>
     </div>
