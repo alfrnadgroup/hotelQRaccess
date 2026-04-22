@@ -1,4 +1,5 @@
 import os
+import json
 from aiohttp import web
 
 from utils.token import generate_token, verify_token
@@ -6,84 +7,34 @@ from utils.qr import generate_qr_image
 
 routes = web.RouteTableDef()
 
-# -------------------------
-# HOME
-# -------------------------
-@routes.get("/")
-async def home(request):
-    return web.json_response({"status": "QR System Running"})
+
+# =========================
+# 🏠 HOME PAGE
+# =========================
+@routes.get('/')
+async def index(request):
+    return web.FileResponse('./templates/index.html')
 
 
-# -------------------------
-# GENERATE QR IMAGE
-# -------------------------
-@routes.get("/generate_qr")
+# =========================
+# 🧾 GENERATE QR
+# =========================
+@routes.get('/generate_qr')
 async def generate_qr(request):
-    try:
-        data = request.query.get("data")
+    data = request.query.get("data")
 
-        if not data:
-            return web.json_response({"error": "missing data"}, status=400)
+    if not data:
+        return web.json_response({"error": "missing data"}, status=400)
 
-        token = generate_token(data)
-        img_bytes = generate_qr_image(token)
+    token = generate_token(data)
+    img_bytes = generate_qr_image(token)
 
-        return web.Response(body=img_bytes, content_type="image/png")
-
-    except Exception as e:
-        return web.json_response({"error": str(e)}, status=500)
+    return web.Response(body=img_bytes, content_type='image/png')
 
 
-# -------------------------
-# VERIFY QR (optional)
-# -------------------------
-@routes.post("/verify")
-async def verify(request):
-    try:
-        body = await request.json()
-        token = body.get("token")
-
-        valid, decoded = verify_token(token)
-
-        return web.json_response({
-            "valid": valid,
-            "data": decoded
-        })
-
-    except Exception as e:
-        return web.json_response({
-            "valid": False,
-            "error": str(e)
-        }, status=500)
-
-
-# -------------------------
-# APP SETUP
-# -------------------------
-app = web.Application()
-app.add_routes(routes)
-
-# -------------------------
-# STATIC FILES (LOGO FIX)
-# -------------------------
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-app.router.add_static(
-    "/static",
-    os.path.join(BASE_DIR, "static"),
-    show_index=False
-)
-
-
-# -------------------------
-# RUN SERVER (RENDER SAFE)
-# -------------------------
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-
-    print("HOTEL QR SYSTEM RUNNING ON PORT:", port)
-
-    web.run_app(app, host="0.0.0.0", port=port)# =========================
+# =========================
+# 🔐 VERIFY QR (future door system)
+# =========================
 @routes.post('/verify')
 async def verify(request):
     try:
