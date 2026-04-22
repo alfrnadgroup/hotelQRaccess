@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -11,7 +11,7 @@
   <style>
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
+      font-family: Arial;
       background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
       color: white;
       display: flex;
@@ -34,7 +34,7 @@
     }
 
     .header img {
-      width: 120px;
+      width: 110px;
       margin-bottom: 10px;
     }
 
@@ -44,13 +44,12 @@
       letter-spacing: 1px;
     }
 
-    /* FORM CARD */
+    /* FORM */
     .form-card {
       background: white;
       color: black;
       padding: 20px;
       border-radius: 14px;
-      margin-bottom: 20px;
     }
 
     input {
@@ -71,17 +70,15 @@
       margin-top: 10px;
     }
 
-    /* QR CARD (THIS IS WHAT WE EXPORT) */
+    /* QR CARD */
     .qr-card {
       width: 320px;
       margin: 20px auto;
       padding: 20px;
       border-radius: 16px;
       background: linear-gradient(135deg, #7b1fa2, #512da8);
-      color: white;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-      text-align: center;
       display: none;
+      text-align: center;
     }
 
     .qr-card img {
@@ -90,21 +87,15 @@
       border-radius: 10px;
     }
 
-    .qr-title {
-      font-size: 18px;
-      margin-bottom: 10px;
-    }
-
     .qr-meta {
-      font-size: 13px;
       text-align: left;
+      font-size: 13px;
       margin-top: 10px;
-      line-height: 1.6;
     }
 
     .download-btn {
-      margin-top: 15px;
       background: #ff9800;
+      margin-top: 15px;
     }
   </style>
 </head>
@@ -115,7 +106,7 @@
 
   <!-- HEADER -->
   <div class="header">
-    <img src="logo.png" alt="QRswoopAccess Logo">
+    <img src="/static/logo.png" alt="QRswoopAccess Logo">
     <h1>QRswoopAccess</h1>
     <p>Smart Hotel QR Access System</p>
   </div>
@@ -126,7 +117,6 @@
     <input id="room" placeholder="Room Number (e.g. 512)" />
     <input id="name" placeholder="Guest Name (e.g. Ahmed Alfahdi)" />
     <input id="guest_id" placeholder="Guest ID (e.g. A8392)" />
-
     <input id="checkin" type="datetime-local" />
     <input id="checkout" type="datetime-local" />
 
@@ -134,10 +124,10 @@
 
   </div>
 
-  <!-- QR CARD (EXPORT AREA) -->
+  <!-- QR CARD -->
   <div id="qrCard" class="qr-card">
 
-    <div class="qr-title">?? Hotel Access Card</div>
+    <h3>?? Hotel Access Card</h3>
 
     <img id="qrImg"/>
 
@@ -151,25 +141,19 @@
 
 <script>
 
-let lastQRData = "";
-
 function generateQR() {
 
     const payload = {
-        room: document.getElementById("room").value,
-        name: document.getElementById("name").value,
-        guest_id: document.getElementById("guest_id").value,
-        checkin: document.getElementById("checkin").value,
-        checkout: document.getElementById("checkout").value
+        room: room.value,
+        name: name.value,
+        guest_id: guest_id.value,
+        checkin: checkin.value,
+        checkout: checkout.value
     };
 
-    lastQRData = payload;
+    qrImg.src = "/generate_qr?data=" + encodeURIComponent(JSON.stringify(payload));
 
-    // show QR from backend
-    document.getElementById("qrImg").src =
-        "/generate_qr?data=" + encodeURIComponent(JSON.stringify(payload));
-
-    document.getElementById("meta").innerHTML = `
+    meta.innerHTML = `
         <b>Room:</b> ${payload.room}<br>
         <b>Name:</b> ${payload.name}<br>
         <b>Guest ID:</b> ${payload.guest_id}<br>
@@ -177,23 +161,18 @@ function generateQR() {
         <b>Check-out:</b> ${payload.checkout}
     `;
 
-    document.getElementById("qrCard").style.display = "block";
+    qrCard.style.display = "block";
 }
 
 async function downloadPDF() {
 
-    const card = document.getElementById("qrCard");
-
-    const canvas = await html2canvas(card);
+    const canvas = await html2canvas(document.getElementById("qrCard"));
     const imgData = canvas.toDataURL("image/png");
 
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF("p", "mm", "a4");
 
-    const width = 180;
-    const height = (canvas.height * width) / canvas.width;
-
-    pdf.addImage(imgData, "PNG", 15, 20, width, height);
+    pdf.addImage(imgData, "PNG", 15, 20, 180, 180);
     pdf.save("QRswoopAccess-card.pdf");
 }
 
