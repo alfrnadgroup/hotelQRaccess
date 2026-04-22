@@ -1,40 +1,90 @@
 import os
+import asyncio
 from aiohttp import web
 
 from utils.token import generate_token, verify_token
-from utils.qr import generate_qr_image
 
 routes = web.RouteTableDef()
+
+# =========================
+# MEMORY DB
+# =========================
+BOOKINGS = {}
 
 # =========================
 # HOME
 # =========================
 @routes.get('/')
-async def index(request):
-    return web.FileResponse('./templates/index.html')
+async def home(request):
+    return web.json_response({"status": "REALACCESS RUNNING"})
 
 # =========================
-# GENERATE QR
+# CHECKIN
 # =========================
-@routes.get('/generate_qr')
-async def generate_qr(request):
+@routes.post('/api/checkin')
+async def checkin(request):
+    data = await request.json()
 
-    data = request.query.get("data")
+    room = data["room"]
 
-    if not data:
-        return web.json_response({"error": "missing data"})
+    BOOKINGS[room] = data
 
-    token = generate_token(data)
-    img_bytes = generate_qr_image(token)
+    token = generate_token({
+        "room": room,
+        "guest_id": data["guest_id"]
+    })
 
-    return web.Response(body=img_bytes, content_type='image/png')
+    return web.json_response({"qr_token": token})
 
 # =========================
 # VERIFY
 # =========================
 @routes.post('/verify')
 async def verify(request):
+    body = await request.json()
+    token = body.get("token")
 
+    valid, decoded = verify_token(token)
+
+    if not valid:
+        return web.json_response({"valid": False})
+
+    room = decoded.get("room")
+
+    return web.json_response({
+        "valid": True,
+        "room": room,
+        "guest": BOOKINGS.get(room, {}).get("name")
+    })
+
+# =========================
+# APP SETUP
+# =========================
+app = web.Application()
+app.add_routes(routes)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+app.router.add_static(
+    '/static',
+    os.path.join(BASE_DIR, 'static'),
+    show_index=False
+)
+
+# =========================
+# RENDER SAFE START (IMPORTANT FIX)
+# =========================
+async def init_app():
+    return app
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8080))
+
+    web.run_app(
+        init_app(),
+        host="0.0.0.0",
+        port=port
+    )
     body = await request.json()
     token = body.get("token")
 
