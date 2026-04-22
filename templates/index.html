@@ -41,6 +41,7 @@
     .header h1 {
       margin: 0;
       font-size: 28px;
+      letter-spacing: 1px;
     }
 
     /* FORM */
@@ -97,11 +98,6 @@
       background: #ff9800;
       margin-top: 15px;
     }
-
-    /* hidden base64 logo */
-    #logoBase64 {
-      display: none;
-    }
   </style>
 </head>
 
@@ -111,7 +107,7 @@
 
   <!-- HEADER -->
   <div class="header">
-    <!-- PAGE LOGO -->
+    <!-- LOGO (PAGE) -->
     <img id="logoImg" alt="QRswoopAccess Logo">
 
     <h1>QRswoopAccess</h1>
@@ -134,8 +130,8 @@
   <!-- QR CARD -->
   <div id="qrCard" class="qr-card">
 
-    <!-- LOGO INSIDE QR CARD (IMPORTANT FOR PDF) -->
-    <img id="cardLogo" style="width:70px; margin-bottom:10px;"/>
+    <!-- LOGO INSIDE CARD (IMPORTANT FOR PDF) -->
+    <img id="cardLogo" style="width:70px; margin-bottom:10px;" />
 
     <h3>?? Hotel Access Card</h3>
 
@@ -151,14 +147,11 @@
 
 <script>
 
-let lastQR = "";
+let logoPath = "/static/logo.png";
 
-/* ?? BASE64 LOGO (THIS FIXES PDF ISSUE) */
-const logoBase64 = "data:image/png;base64,PASTE_YOUR_BASE64_HERE";
-
-/* set logos */
-document.getElementById("logoImg").src = logoBase64;
-document.getElementById("cardLogo").src = logoBase64;
+/* ? FIX: use real static file (NOT base64) */
+document.getElementById("logoImg").src = logoPath;
+document.getElementById("cardLogo").src = logoPath;
 
 function generateQR() {
 
@@ -169,8 +162,6 @@ function generateQR() {
         checkin: checkin.value,
         checkout: checkout.value
     };
-
-    lastQR = payload;
 
     qrImg.src = "/generate_qr?data=" + encodeURIComponent(JSON.stringify(payload));
 
@@ -189,9 +180,19 @@ async function downloadPDF() {
 
     const card = document.getElementById("qrCard");
 
+    /* ? WAIT FOR IMAGES TO LOAD (fix PDF missing logo) */
+    const images = card.getElementsByTagName("img");
+
+    await Promise.all([...images].map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+            img.onload = img.onerror = resolve;
+        });
+    }));
+
     const canvas = await html2canvas(card, {
         useCORS: true,
-        allowTaint: true
+        allowTaint: false
     });
 
     const imgData = canvas.toDataURL("image/png");
