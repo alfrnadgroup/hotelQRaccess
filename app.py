@@ -1,27 +1,26 @@
 import os
+import json
 from aiohttp import web
 
 from utils.token import generate_token, verify_token
 from utils.qr import generate_qr_image
 
-# =========================
-# ROUTES
-# =========================
 routes = web.RouteTableDef()
 
-# =========================
-# HOME
-# =========================
-@routes.get('/')
-async def home(request):
-    return web.json_response({"status": "HOTEL QR SYSTEM RUNNING"})
 
 # =========================
-# GENERATE QR
+# 🏠 HOME PAGE
+# =========================
+@routes.get('/')
+async def index(request):
+    return web.FileResponse('./templates/index.html')
+
+
+# =========================
+# 🧾 GENERATE QR
 # =========================
 @routes.get('/generate_qr')
 async def generate_qr(request):
-
     data = request.query.get("data")
 
     if not data:
@@ -32,15 +31,18 @@ async def generate_qr(request):
 
     return web.Response(body=img_bytes, content_type='image/png')
 
+
 # =========================
-# VERIFY QR
+# 🔐 VERIFY QR (future door system)
 # =========================
 @routes.post('/verify')
 async def verify(request):
-
     try:
         body = await request.json()
         token = body.get("token")
+
+        if not token:
+            return web.json_response({"error": "missing token"}, status=400)
 
         valid, decoded = verify_token(token)
 
@@ -55,31 +57,28 @@ async def verify(request):
             "error": str(e)
         })
 
+
 # =========================
-# APP SETUP
+# 🚀 APP SETUP
 # =========================
 app = web.Application()
 app.add_routes(routes)
 
+# =========================
+# 📁 STATIC FILES (FIX FOR LOGO)
+# =========================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app.router.add_static(
     '/static',
     os.path.join(BASE_DIR, 'static'),
-    show_index=False
+    show_index=True
 )
 
 # =========================
-# RUN SERVER (RENDER SAFE)
+# 🌐 RUN SERVER (RENDER SAFE)
 # =========================
+PORT = int(os.environ.get("PORT", 8080))
+
 if __name__ == "__main__":
-
-    port = int(os.environ.get("PORT", 8080))
-
-    print("HOTEL QR STARTING ON PORT:", port)
-
-    web.run_app(
-        app,
-        host="0.0.0.0",
-        port=port
-)
+    web.run_app(app, host="0.0.0.0", port=PORT)
