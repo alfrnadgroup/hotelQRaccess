@@ -93,6 +93,65 @@ if __name__ == "__main__":
         app,
         host="0.0.0.0",
         port=port
+    )
+    except Exception as e:
+        return web.json_response({
+            "error": str(e)
+        }, status=500)
+
+# =========================
+# VERIFY QR (OPTIONAL DOOR SIDE)
+# =========================
+@routes.post('/verify')
+async def verify(request):
+
+    try:
+        body = await request.json()
+        token = body.get("token")
+
+        valid, decoded = verify_token(token)
+
+        return web.json_response({
+            "valid": valid,
+            "data": decoded
+        })
+
+    except Exception as e:
+        return web.json_response({
+            "valid": False,
+            "error": str(e)
+        })
+
+# =========================
+# APP SETUP
+# =========================
+app = web.Application()
+app.add_routes(routes)
+
+# =========================
+# STATIC FILES (LOGO FIX)
+# =========================
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+app.router.add_static(
+    '/static',
+    os.path.join(BASE_DIR, 'static'),
+    show_index=False
+)
+
+# =========================
+# RENDER SAFE START
+# =========================
+if __name__ == "__main__":
+
+    port = int(os.environ.get("PORT", 8080))
+
+    print("HOTEL QR ACCESS STARTING ON PORT:", port)
+
+    web.run_app(
+        app,
+        host="0.0.0.0",
+        port=port
     )    return web.json_response({"qr_token": token})
 
 # =========================
