@@ -4,9 +4,6 @@ from aiohttp import web
 from utils.token import generate_token, verify_token
 from utils.qr import generate_qr_image
 
-# =========================
-# ROUTES
-# =========================
 routes = web.RouteTableDef()
 
 # =========================
@@ -14,12 +11,10 @@ routes = web.RouteTableDef()
 # =========================
 @routes.get('/')
 async def home(request):
-    return web.json_response({
-        "status": "HOTEL QR ACCESS RUNNING"
-    })
+    return web.json_response({"status": "HOTEL QR RUNNING"})
 
 # =========================
-# GENERATE QR (FRONTEND CALL)
+# GENERATE QR
 # =========================
 @routes.get('/generate_qr')
 async def generate_qr(request):
@@ -29,12 +24,55 @@ async def generate_qr(request):
     if not data:
         return web.json_response({"error": "missing data"}, status=400)
 
-    try:
-        token = generate_token(data)
-        img_bytes = generate_qr_image(token)
+    token = generate_token(data)
+    img = generate_qr_image(token)
 
-        return web.Response(body=img_bytes, content_type='image/png')
+    return web.Response(body=img, content_type='image/png')
 
+# =========================
+# VERIFY
+# =========================
+@routes.post('/verify')
+async def verify(request):
+
+    body = await request.json()
+    token = body.get("token")
+
+    valid, decoded = verify_token(token)
+
+    return web.json_response({
+        "valid": valid,
+        "data": decoded
+    })
+
+# =========================
+# APP SETUP
+# =========================
+app = web.Application()
+app.add_routes(routes)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+app.router.add_static(
+    '/static',
+    os.path.join(BASE_DIR, 'static'),
+    show_index=False
+)
+
+# =========================
+# START SERVER (RENDER SAFE)
+# =========================
+if __name__ == "__main__":
+
+    port = int(os.environ.get("PORT", 8080))
+
+    print("STARTING HOTEL QR ON PORT:", port)
+
+    web.run_app(
+        app,
+        host="0.0.0.0",
+        port=port
+)
     except Exception as e:
         return web.json_response({
             "error": str(e)
