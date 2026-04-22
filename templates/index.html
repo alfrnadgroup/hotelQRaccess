@@ -24,11 +24,6 @@ body {
   text-align: center;
 }
 
-/* HEADER */
-.header img {
-  width: 110px;
-}
-
 /* FORM */
 .form-card {
   background: white;
@@ -67,25 +62,19 @@ button {
     inset 0 2px 10px rgba(255,255,255,0.2);
 }
 
-/* QR AREA */
-.qr-area {
-  position: relative;
-  width: 220px;
-  margin: 0 auto;
+/* ?? STACK LAYOUT (NO OVERLAP EVER) */
+.qr-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
 }
 
-/* ?? LOGO (TOP) */
-.logo-overlay {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translate(-50%, -50%);
-
+/* LOGO */
+.logo-box {
   background: linear-gradient(145deg, #ffffff, #e0e0e0);
-  padding: 6px;
+  padding: 8px;
   border-radius: 14px;
-
-  z-index: 10;
 
   box-shadow:
     0 8px 16px rgba(0,0,0,0.4),
@@ -93,13 +82,12 @@ button {
     inset 0 -2px 4px rgba(0,0,0,0.2);
 }
 
-.logo-overlay img {
+.logo-box img {
   width: 60px;
 }
 
-/* ?? QR (NOW LOWER) */
-.qr-frame {
-  margin-top: 40px;   /* ? THIS IS THE KEY CHANGE */
+/* QR */
+.qr-box {
   background: linear-gradient(145deg, #ffffff, #dcdcdc);
   padding: 10px;
   border-radius: 16px;
@@ -110,19 +98,18 @@ button {
     0 12px 20px rgba(0,0,0,0.4);
 }
 
-.qr-frame img {
-  width: 100%;
+.qr-box img {
+  width: 200px;
   display: block;
 }
 
 /* ROOM */
 .room-text {
-  margin-top: 30px;
+  margin-top: 25px;
   font-size: 26px;
   font-weight: bold;
 }
 
-/* DOWNLOAD */
 .download-btn {
   background: #ff9800;
   margin-top: 15px;
@@ -133,11 +120,6 @@ button {
 <body>
 
 <div class="container">
-
-<div class="header">
-  <img id="logoImg">
-  <h1>QRswoopAccess</h1>
-</div>
 
 <div class="form-card">
   <input id="room" placeholder="Room Number"/>
@@ -151,15 +133,14 @@ button {
 
 <div id="qrCard" class="qr-card">
 
-  <div class="qr-area">
+  <!-- CLEAN STACK -->
+  <div class="qr-stack">
 
-    <!-- LOGO -->
-    <div class="logo-overlay">
+    <div class="logo-box">
       <img id="cardLogo">
     </div>
 
-    <!-- QR (LOWERED) -->
-    <div class="qr-frame">
+    <div class="qr-box">
       <img id="qrImg">
     </div>
 
@@ -179,7 +160,6 @@ button {
 
 const logoPath = "/static/logo.png";
 
-logoImg.src = logoPath;
 cardLogo.src = logoPath;
 
 function generateQR() {
