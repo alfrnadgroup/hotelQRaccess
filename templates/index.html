@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hotel QR Access</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            text-align: center;
+            padding-top: 60px;
+        }
+
+        .card {
+            background: white;
+            color: black;
+            width: 350px;
+            margin: auto;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        input {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #2a5298;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        img {
+            margin-top: 15px;
+            width: 200px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>?? Hotel QR Access System</h1>
+
+    <div class="card">
+        <h3>Generate Room Access</h3>
+
+        <input id="room" placeholder="Enter Room Number" />
+
+        <button onclick="generateQR()">Generate QR</button>
+
+        <div>
+            <img id="qr" />
+        </div>
+    </div>
+
+    <script>
+        function generateQR() {
+            let room = document.getElementById("room").value;
+
+            document.getElementById("qr").src =
+                "/generate_qr?room=" + room;
+        }
+    </script>
+
+</body>
+</html>
