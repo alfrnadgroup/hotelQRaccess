@@ -41,6 +41,7 @@
     .header h1 {
       margin: 0;
       font-size: 28px;
+      letter-spacing: 1px;
     }
 
     /* FORM */
@@ -71,7 +72,7 @@
 
     /* QR CARD */
     .qr-card {
-      width: 340px;
+      width: 320px;
       margin: 20px auto;
       padding: 20px;
       border-radius: 16px;
@@ -81,7 +82,7 @@
     }
 
     .qr-card img {
-      width: 180px;
+      width: 200px;
       margin-top: 10px;
       border-radius: 10px;
     }
@@ -90,17 +91,11 @@
       text-align: left;
       font-size: 13px;
       margin-top: 10px;
-      line-height: 1.5;
     }
 
     .download-btn {
       background: #ff9800;
       margin-top: 15px;
-    }
-
-    /* hidden base64 logo */
-    #logoBase64 {
-      display: none;
     }
   </style>
 </head>
@@ -111,9 +106,7 @@
 
   <!-- HEADER -->
   <div class="header">
-    <!-- PAGE LOGO -->
-    <img id="logoImg" alt="QRswoopAccess Logo">
-
+    <img src="/static/logo.png" alt="QRswoopAccess Logo">
     <h1>QRswoopAccess</h1>
     <p>Smart Hotel QR Access System</p>
   </div>
@@ -134,9 +127,6 @@
   <!-- QR CARD -->
   <div id="qrCard" class="qr-card">
 
-    <!-- LOGO INSIDE QR CARD (IMPORTANT FOR PDF) -->
-    <img id="cardLogo" style="width:70px; margin-bottom:10px;"/>
-
     <h3>?? Hotel Access Card</h3>
 
     <img id="qrImg"/>
@@ -151,15 +141,6 @@
 
 <script>
 
-let lastQR = "";
-
-/* ?? BASE64 LOGO (THIS FIXES PDF ISSUE) */
-const logoBase64 = "data:image/png;base64,PASTE_YOUR_BASE64_HERE";
-
-/* set logos */
-document.getElementById("logoImg").src = logoBase64;
-document.getElementById("cardLogo").src = logoBase64;
-
 function generateQR() {
 
     const payload = {
@@ -169,8 +150,6 @@ function generateQR() {
         checkin: checkin.value,
         checkout: checkout.value
     };
-
-    lastQR = payload;
 
     qrImg.src = "/generate_qr?data=" + encodeURIComponent(JSON.stringify(payload));
 
@@ -187,13 +166,7 @@ function generateQR() {
 
 async function downloadPDF() {
 
-    const card = document.getElementById("qrCard");
-
-    const canvas = await html2canvas(card, {
-        useCORS: true,
-        allowTaint: true
-    });
-
+    const canvas = await html2canvas(document.getElementById("qrCard"));
     const imgData = canvas.toDataURL("image/png");
 
     const { jsPDF } = window.jspdf;
