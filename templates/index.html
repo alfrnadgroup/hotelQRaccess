@@ -1,43 +1,61 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Hotel QR Access</title>
+    <title>Hotel QR Access System</title>
+
     <style>
         body {
             font-family: Arial;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
             color: white;
             text-align: center;
-            padding-top: 60px;
+            padding-top: 40px;
         }
 
         .card {
             background: white;
             color: black;
-            width: 350px;
+            width: 430px;
             margin: auto;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            padding: 25px;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
         }
 
         input {
             width: 90%;
             padding: 10px;
-            margin: 10px 0;
+            margin: 6px 0;
+            border-radius: 6px;
+            border: 1px solid #ccc;
         }
 
         button {
-            padding: 10px 20px;
-            background: #2a5298;
+            padding: 10px 18px;
+            background: #2c5364;
             color: white;
             border: none;
             cursor: pointer;
+            margin-top: 10px;
+            border-radius: 6px;
         }
 
         img {
             margin-top: 15px;
-            width: 200px;
+            width: 220px;
+        }
+
+        .title {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        label {
+            font-size: 12px;
+            display: block;
+            text-align: left;
+            margin-left: 5%;
+            margin-top: 8px;
         }
     </style>
 </head>
@@ -47,23 +65,40 @@
     <h1>?? Hotel QR Access System</h1>
 
     <div class="card">
-        <h3>Generate Room Access</h3>
 
-        <input id="room" placeholder="Enter Room Number" />
+        <div class="title">Guest Check-In Generator</div>
 
-        <button onclick="generateQR()">Generate QR</button>
+        <input id="room" placeholder="Room Number (e.g. 512)" />
+        <input id="name" placeholder="Guest Name (e.g. Ahmed Alfahdi)" />
+        <input id="guest_id" placeholder="Guest ID (e.g. A8392)" />
+
+        <label>Check-in</label>
+        <input id="checkin" type="datetime-local" />
+
+        <label>Check-out</label>
+        <input id="checkout" type="datetime-local" />
+
+        <button onclick="generateQR()">Generate Access QR</button>
 
         <div>
             <img id="qr" />
         </div>
+
     </div>
 
     <script>
         function generateQR() {
-            let room = document.getElementById("room").value;
+
+            let payload = {
+                room: document.getElementById("room").value,
+                name: document.getElementById("name").value,
+                guest_id: document.getElementById("guest_id").value,
+                checkin: document.getElementById("checkin").value,
+                checkout: document.getElementById("checkout").value
+            };
 
             document.getElementById("qr").src =
-                "/generate_qr?room=" + room;
+                "/generate_qr?data=" + encodeURIComponent(JSON.stringify(payload));
         }
     </script>
 
