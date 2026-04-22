@@ -20,8 +20,29 @@ body {
 }
 
 .container {
-  max-width: 900px;
+  width: 100%;
+  max-width: 950px;
   text-align: center;
+}
+
+/* HEADER */
+.header {
+  margin-bottom: 20px;
+}
+
+.header img {
+  width: 120px;
+}
+
+.header h1 {
+  margin: 5px 0 0;
+  font-size: 28px;
+  letter-spacing: 1px;
+}
+
+.header p {
+  margin: 5px 0 0;
+  opacity: 0.8;
 }
 
 /* FORM */
@@ -30,12 +51,15 @@ body {
   color: black;
   padding: 20px;
   border-radius: 14px;
+  margin-bottom: 20px;
 }
 
 input {
   width: 90%;
   padding: 10px;
   margin: 6px 0;
+  border-radius: 6px;
+  border: 1px solid #ccc;
 }
 
 button {
@@ -48,7 +72,7 @@ button {
   cursor: pointer;
 }
 
-/* CARD */
+/* QR CARD */
 .qr-card {
   width: 360px;
   margin: 40px auto;
@@ -62,7 +86,7 @@ button {
     inset 0 2px 10px rgba(255,255,255,0.2);
 }
 
-/* ?? STACK LAYOUT (NO OVERLAP EVER) */
+/* STACK */
 .qr-stack {
   display: flex;
   flex-direction: column;
@@ -70,7 +94,7 @@ button {
   gap: 14px;
 }
 
-/* LOGO */
+/* LOGO BOX */
 .logo-box {
   background: linear-gradient(145deg, #ffffff, #e0e0e0);
   padding: 8px;
@@ -86,7 +110,7 @@ button {
   width: 60px;
 }
 
-/* QR */
+/* QR BOX */
 .qr-box {
   background: linear-gradient(145deg, #ffffff, #dcdcdc);
   padding: 10px;
@@ -100,7 +124,6 @@ button {
 
 .qr-box img {
   width: 200px;
-  display: block;
 }
 
 /* ROOM */
@@ -110,6 +133,7 @@ button {
   font-weight: bold;
 }
 
+/* DOWNLOAD */
 .download-btn {
   background: #ff9800;
   margin-top: 15px;
@@ -121,19 +145,27 @@ button {
 
 <div class="container">
 
+<!-- HEADER (RESTORED) -->
+<div class="header">
+  <img src="/static/logo.png" alt="logo">
+  <h1>QRswoopAccess</h1>
+  <p>Smart Hotel QR Access System</p>
+</div>
+
+<!-- FORM -->
 <div class="form-card">
-  <input id="room" placeholder="Room Number"/>
-  <input id="name" placeholder="Guest Name"/>
-  <input id="guest_id" placeholder="Guest ID"/>
-  <input id="checkin" type="datetime-local"/>
-  <input id="checkout" type="datetime-local"/>
+  <input id="room" placeholder="Room Number (e.g. 512)" />
+  <input id="name" placeholder="Guest Name" />
+  <input id="guest_id" placeholder="Guest ID" />
+  <input id="checkin" type="datetime-local" />
+  <input id="checkout" type="datetime-local" />
 
   <button onclick="generateQR()">Generate QR Card</button>
 </div>
 
+<!-- QR CARD -->
 <div id="qrCard" class="qr-card">
 
-  <!-- CLEAN STACK -->
   <div class="qr-stack">
 
     <div class="logo-box">
