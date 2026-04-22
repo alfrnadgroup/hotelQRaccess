@@ -74,29 +74,12 @@ button {
   margin: 0 auto;
 }
 
-/* QR FRAME */
-.qr-frame {
-  background: linear-gradient(145deg, #ffffff, #dcdcdc);
-  padding: 10px;
-  border-radius: 16px;
-
-  box-shadow:
-    inset 0 3px 6px rgba(0,0,0,0.25),
-    inset 0 -3px 6px rgba(255,255,255,0.9),
-    0 12px 20px rgba(0,0,0,0.4);
-}
-
-.qr-frame img {
-  width: 100%;
-  display: block;
-}
-
-/* ?? ADJOINT LOGO (TOUCHING EDGE, NO OVERLAP) */
+/* ?? LOGO (TOP) */
 .logo-overlay {
   position: absolute;
-  top: 0;                       /* anchor to top edge */
+  top: 0;
   left: 50%;
-  transform: translate(-50%, -50%); /* move up half height */
+  transform: translate(-50%, -50%);
 
   background: linear-gradient(145deg, #ffffff, #e0e0e0);
   padding: 6px;
@@ -112,12 +95,29 @@ button {
 
 .logo-overlay img {
   width: 60px;
+}
+
+/* ?? QR (NOW LOWER) */
+.qr-frame {
+  margin-top: 40px;   /* ? THIS IS THE KEY CHANGE */
+  background: linear-gradient(145deg, #ffffff, #dcdcdc);
+  padding: 10px;
+  border-radius: 16px;
+
+  box-shadow:
+    inset 0 3px 6px rgba(0,0,0,0.25),
+    inset 0 -3px 6px rgba(255,255,255,0.9),
+    0 12px 20px rgba(0,0,0,0.4);
+}
+
+.qr-frame img {
+  width: 100%;
   display: block;
 }
 
 /* ROOM */
 .room-text {
-  margin-top: 35px;
+  margin-top: 30px;
   font-size: 26px;
   font-weight: bold;
 }
@@ -153,13 +153,14 @@ button {
 
   <div class="qr-area">
 
-    <div class="qr-frame">
-      <img id="qrImg">
-    </div>
-
-    <!-- ? ADJOINT LOGO -->
+    <!-- LOGO -->
     <div class="logo-overlay">
       <img id="cardLogo">
+    </div>
+
+    <!-- QR (LOWERED) -->
+    <div class="qr-frame">
+      <img id="qrImg">
     </div>
 
   </div>
