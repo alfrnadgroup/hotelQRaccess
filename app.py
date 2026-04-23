@@ -1,135 +1,49 @@
-from flask import Flask, request, jsonify, render_template
-from flask_cors import CORS
-from core.security import generate_token, verify_token
-from core.database import save_booking, get_booking, get_all
-import datetime
 import os
+import json
+from aiohttp import web
+from utils.token import generate_token, verify_token
+from utils.qr import generate_qr_image
 
-app = Flask(__name__)
+routes = web.RouteTableDef()
 
-# ?? BRIDGE: allow ONLY your frontend
-CORS(app, resources={
-    r"/api/*": {
-        "origins": [
-            "https://hotelqraccess.onrender.com"
-        ]
-    }
-})
+# Home page
+@routes.get('/')
+async def index(request):
+    return web.FileResponse('./templates/index.html')
 
 
-# -------------------------
-# HEALTH CHECK (BRIDGE TEST)
-# -------------------------
-@app.route("/")
-def home():
-    return jsonify({
-        "status": "REALACCESS BACKEND RUNNING",
-        "bridge": "active"
+# Generate QR
+@routes.get('/generate_qr')
+async def generate_qr(request):
+    data = request.query.get("data", None)
+
+    if not data:
+        return web.json_response({"error": "missing data"})
+
+    token = generate_token(data)
+    img_bytes = generate_qr_image(token)
+
+    return web.Response(body=img_bytes, content_type='image/png')
+
+
+# Verify QR (door side)
+@routes.post('/verify')
+async def verify(request):
+    body = await request.json()
+    token = body.get("token")
+
+    valid, decoded = verify_token(token)
+
+    return web.json_response({
+        "valid": valid,
+        "data": decoded
     })
 
 
-# -------------------------
-# CHECK-IN (FRONTEND ? BACKEND BRIDGE)
-# -------------------------
-@app.route("/api/checkin", methods=["POST"])
-def checkin():
+app = web.Application()
+app.add_routes(routes)
 
-    data = request.get_json()
+PORT = int(os.environ.get("PORT", 8080))
 
-    # ? validation layer (important for real system)
-    required = ["room", "name", "guest_id", "checkin", "checkout"]
-    for r in required:
-        if r not in data:
-            return jsonify({"error": f"missing {r}"}), 400
-
-    booking = {
-        "room": data["room"],
-        "name": data["name"],
-        "guest_id": data["guest_id"],
-        "checkin": data["checkin"],
-        "checkout": data["checkout"],
-        "created_at": str(datetime.datetime.utcnow())
-    }
-
-    # store booking
-    save_booking(data["room"], booking)
-
-    # generate secure token
-    token = generate_token({
-        "room": data["room"],
-        "guest_id": data["guest_id"]
-    })
-
-    return jsonify({
-        "qr_token": token,
-        "status": "stored"
-    })
-
-
-# -------------------------
-# VALIDATE QR (ADMIN SCANNER)
-# -------------------------
-@app.route("/api/validate", methods=["POST"])
-def validate():
-
-    token = request.json.get("token")
-
-    if not token:
-        return jsonify({"access": "DENIED", "reason": "missing token"}), 400
-
-    decoded = verify_token(token)
-
-    if not decoded:
-        return jsonify({"access": "DENIED", "reason": "invalid token"})
-
-    booking = get_booking(decoded["room"])
-
-    if not booking:
-        return jsonify({"access": "DENIED", "reason": "no booking"})
-
-    now = datetime.datetime.utcnow()
-
-    try:
-        checkout = datetime.datetime.fromisoformat(booking["checkout"])
-
-        if now > checkout:
-            return jsonify({
-                "access": "DENIED",
-                "reason": "expired"
-            })
-
-    except:
-        return jsonify({
-            "access": "DENIED",
-            "reason": "date error"
-        })
-
-    return jsonify({
-        "access": "GRANTED",
-        "room": decoded["room"],
-        "guest": booking["name"]
-    })
-
-
-# -------------------------
-# BOOKINGS (ADMIN PANEL DATA)
-# -------------------------
-@app.route("/api/bookings")
-def bookings():
-    return jsonify(get_all())
-
-
-# -------------------------
-# ADMIN UI (QR SCANNER PAGE)
-# -------------------------
-@app.route("/admin")
-def admin():
-    return render_template("admin.html")
-
-
-# -------------------------
-# RUN SERVER (RENDER SAFE)
-# -------------------------
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    web.run_app(app, host="0.0.0.0", port=PORT)
