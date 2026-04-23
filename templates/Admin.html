@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Admin QR Scanner</title>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<style>
+
+/* =========================
+   FULL SCREEN BASE
+========================= */
+body {
+  margin: 0;
+  font-family: Arial;
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  color: white;
+}
+
+/* =========================
+   LOGIN SCREEN
+========================= */
+.login-screen {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-card {
+  background: white;
+  color: black;
+  padding: 30px;
+  border-radius: 15px;
+  width: 340px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+.login-card img {
+  width: 90px;
+  margin-bottom: 10px;
+}
+
+input {
+  width: 90%;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #7b1fa2, #512da8);
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* =========================
+   SCANNER SCREEN
+========================= */
+#scannerPanel {
+  display: none;
+  height: 100vh;
+  text-align: center;
+  padding-top: 20px;
+}
+
+/* HEADER */
+.header img {
+  width: 90px;
+}
+
+.header h2 {
+  margin: 10px 0 20px;
+}
+
+/* SCANNER */
+.scanner-box {
+  display: flex;
+  justify-content: center;
+}
+
+#reader {
+  width: 380px;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+/* RESULT */
+.result {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 10px;
+  font-size: 20px;
+  width: 320px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.ok {
+  background: linear-gradient(135deg, #00c853, #64dd17);
+}
+
+.bad {
+  background: linear-gradient(135deg, #d50000, #ff1744);
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- =========================
+     LOGIN
+========================= -->
+<div class="login-screen" id="loginBox">
+
+  <div class="login-card">
+
+    <img src="/static/logo.png" onerror="this.src='https://via.placeholder.com/90?text=LOGO'">
+
+    <h3>Admin Login</h3>
+
+    <input id="user" placeholder="Username">
+    <input id="pass" type="password" placeholder="Password">
+
+    <button onclick="login()">Login</button>
+
+  </div>
+
+</div>
+
+<!-- =========================
+     SCANNER
+========================= -->
+<div id="scannerPanel">
+
+  <div class="header">
+    <img src="/static/logo.png">
+    <h2>QR Scanner</h2>
+  </div>
+
+  <div class="scanner-box">
+    <div id="reader"></div>
+  </div>
+
+  <div id="result" class="result" style="display:none;"></div>
+
+</div>
+
+<script>
+
+/* =========================
+   SOUNDS
+========================= */
+const successSound = new Audio("/static/sounds/success.mp3");
+const deniedSound = new Audio("/static/sounds/denied.mp3");
+
+// fallback sounds
+successSound.onerror = () => {
+  successSound.src = "https://www.soundjay.com/buttons/sounds/button-3.mp3";
+};
+
+deniedSound.onerror = () => {
+  deniedSound.src = "https://www.soundjay.com/buttons/sounds/button-10.mp3";
+};
+
+const resultBox = document.getElementById("result");
+
+/* =========================
+   LOGIN
+========================= */
+function login() {
+
+  const u = document.getElementById("user").value;
+  const p = document.getElementById("pass").value;
+
+  if (u === "Bashq" && p === "5424") {
+
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("scannerPanel").style.display = "block";
+
+    startScanner();
+
+  } else {
+    alert("Invalid credentials");
+  }
+}
+
+/* =========================
+   START SCANNER
+========================= */
+function startScanner() {
+
+  const scanner = new Html5QrcodeScanner("reader", {
+    fps: 10,
+    qrbox: 250
+  });
+
+  scanner.render(onScanSuccess);
+}
+
+/* =========================
+   VERIFY QR + SOUND
+========================= */
+function onScanSuccess(decodedText) {
+
+  fetch("/verify", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ token: decodedText })
+  })
+  .then(r => r.json())
+  .then(data => {
+
+    resultBox.style.display = "block";
+
+    if (data.valid) {
+
+      resultBox.className = "result ok";
+      resultBox.innerHTML = "✅ GRANTED<br>Room: " + data.data.room;
+
+      successSound.currentTime = 0;
+      successSound.play();
+
+    } else {
+
+      resultBox.className = "result bad";
+      resultBox.innerHTML = "❌ DENIED";
+
+      deniedSound.currentTime = 0;
+      deniedSound.play();
+    }
+
+  })
+  .catch(() => {
+
+    resultBox.style.display = "block";
+    resultBox.className = "result bad";
+    resultBox.innerHTML = "⚠️ ERROR";
+
+    deniedSound.currentTime = 0;
+    deniedSound.play();
+  });
+
+}
+
+</script>
+
+</body>
+</html>
