@@ -2,56 +2,196 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Admin Scanner</title>
+<title>Admin QR Scanner</title>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
+
 body {
+  margin: 0;
   font-family: Arial;
-  background: #111;
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
   color: white;
-  text-align: center;
-  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
 }
 
-#reader {
+/* =========================
+   LOGIN BOX
+========================= */
+.login-card {
+  background: white;
+  color: black;
+  padding: 25px;
+  border-radius: 15px;
   width: 320px;
-  margin: auto;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
 }
 
+.login-card img {
+  width: 80px;
+  margin-bottom: 10px;
+}
+
+.login-card h3 {
+  margin: 10px 0;
+}
+
+input {
+  width: 90%;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #7b1fa2, #512da8);
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* =========================
+   SCANNER AREA
+========================= */
+#scannerPanel {
+  display: none;
+  text-align: center;
+}
+
+.header img {
+  width: 90px;
+  margin-bottom: 10px;
+}
+
+.header h2 {
+  margin: 5px 0 15px;
+}
+
+/* SCANNER BOX */
+#reader {
+  width: 350px;
+  margin: auto;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+/* RESULT BOX */
 .result {
   margin-top: 20px;
   padding: 15px;
   border-radius: 10px;
   font-size: 20px;
+  width: 80%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.ok { background: green; }
-.bad { background: red; }
+.ok {
+  background: linear-gradient(135deg, #00c853, #64dd17);
+}
+
+.bad {
+  background: linear-gradient(135deg, #d50000, #ff1744);
+}
+
 </style>
 </head>
 
 <body>
 
-<h2>🔐 QR Scanner</h2>
+<!-- =========================
+     LOGIN SCREEN
+========================= -->
+<div class="login-card" id="loginBox">
 
-<div id="reader"></div>
+  <img src="/static/logo.png" onerror="this.src='https://via.placeholder.com/80?text=LOGO'">
 
-<div id="result" class="result" style="display:none;"></div>
+  <h3>Admin Login</h3>
+
+  <input id="user" placeholder="Username">
+  <input id="pass" type="password" placeholder="Password">
+
+  <button onclick="login()">Login</button>
+
+</div>
+
+<!-- =========================
+     SCANNER SCREEN
+========================= -->
+<div id="scannerPanel">
+
+  <div class="header">
+    <img src="/static/logo.png" onerror="this.src='https://via.placeholder.com/90'">
+    <h2>QR Scanner</h2>
+  </div>
+
+  <div id="reader"></div>
+
+  <div id="result" class="result" style="display:none;"></div>
+
+</div>
 
 <script>
 
 const resultBox = document.getElementById("result");
 
+/* =========================
+   LOGIN (UPDATED)
+========================= */
+function login() {
+
+  const u = document.getElementById("user").value;
+  const p = document.getElementById("pass").value;
+
+  if (u === "Bashq" && p === "5424") {
+
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("scannerPanel").style.display = "block";
+
+    startScanner();
+
+  } else {
+    alert("Invalid credentials");
+  }
+}
+
+/* =========================
+   START SCANNER
+========================= */
+function startScanner() {
+
+  const scanner = new Html5QrcodeScanner("reader", {
+    fps: 10,
+    qrbox: 250
+  });
+
+  scanner.render(onScanSuccess);
+}
+
+/* =========================
+   VERIFY QR
+========================= */
 function onScanSuccess(decodedText) {
 
   fetch("/verify", {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify({ token: decodedText })
   })
-  .then(r => r.json())
+  .then(res => res.json())
   .then(data => {
 
     resultBox.style.display = "block";
@@ -64,16 +204,15 @@ function onScanSuccess(decodedText) {
       resultBox.innerHTML = "❌ DENIED";
     }
 
+  })
+  .catch(err => {
+    console.error(err);
+    resultBox.style.display = "block";
+    resultBox.className = "result bad";
+    resultBox.innerHTML = "⚠️ ERROR";
   });
 
 }
-
-const scanner = new Html5QrcodeScanner("reader", {
-  fps: 10,
-  qrbox: 250
-});
-
-scanner.render(onScanSuccess);
 
 </script>
 
