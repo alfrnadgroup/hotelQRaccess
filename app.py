@@ -1,84 +1,94 @@
+from flask import Flask, request, jsonify, render_template
+from core.security import generate_token, verify_token
+from core.database import save_booking, get_booking, get_all
+import datetime
 import os
-import json
-from aiohttp import web
 
-from utils.token import generate_token, verify_token
-from utils.qr import generate_qr_image
-
-routes = web.RouteTableDef()
+app = Flask(__name__)
 
 
-# =========================
-# 🏠 HOME PAGE
-# =========================
-@routes.get('/')
-async def index(request):
-    return web.FileResponse('./templates/index.html')
+@app.route("/")
+def home():
+    return jsonify({"status": "QR System Running"})
 
 
-# =========================
-# 🧾 GENERATE QR
-# =========================
-@routes.get('/generate_qr')
-async def generate_qr(request):
-    data = request.query.get("data")
+# -------------------------
+# CHECK-IN
+# -------------------------
+@app.route("/api/checkin", methods=["POST"])
+def checkin():
 
-    if not data:
-        return web.json_response({"error": "missing data"}, status=400)
+    data = request.get_json()
 
-    token = generate_token(data)
-    img_bytes = generate_qr_image(token)
+    booking = {
+        "room": data["room"],
+        "name": data["name"],
+        "guest_id": data["guest_id"],
+        "checkin": data["checkin"],
+        "checkout": data["checkout"],
+        "created_at": str(datetime.datetime.utcnow())
+    }
 
-    return web.Response(body=img_bytes, content_type='image/png')
+    save_booking(data["room"], booking)
+
+    token = generate_token({
+        "room": data["room"],
+        "guest_id": data["guest_id"]
+    })
+
+    return jsonify({"qr_token": token})
 
 
-# =========================
-# 🔐 VERIFY QR (future door system)
-# =========================
-@routes.post('/verify')
-async def verify(request):
+# -------------------------
+# VALIDATE QR
+# -------------------------
+@app.route("/api/validate", methods=["POST"])
+def validate():
+
+    token = request.json.get("token")
+
+    decoded = verify_token(token)
+
+    if not decoded:
+        return jsonify({"access": "DENIED"})
+
+    booking = get_booking(decoded["room"])
+
+    if not booking:
+        return jsonify({"access": "DENIED"})
+
+    now = datetime.datetime.utcnow()
+
     try:
-        body = await request.json()
-        token = body.get("token")
+        checkout = datetime.datetime.fromisoformat(booking["checkout"])
+        if now > checkout:
+            return jsonify({"access": "DENIED", "reason": "expired"})
+    except:
+        return jsonify({"access": "DENIED", "reason": "date error"})
 
-        if not token:
-            return web.json_response({"error": "missing token"}, status=400)
-
-        valid, decoded = verify_token(token)
-
-        return web.json_response({
-            "valid": valid,
-            "data": decoded
-        })
-
-    except Exception as e:
-        return web.json_response({
-            "valid": False,
-            "error": str(e)
-        })
+    return jsonify({
+        "access": "GRANTED",
+        "room": decoded["room"],
+        "guest": booking["name"]
+    })
 
 
-# =========================
-# 🚀 APP SETUP
-# =========================
-app = web.Application()
-app.add_routes(routes)
+# -------------------------
+# BOOKINGS
+# -------------------------
+@app.route("/api/bookings")
+def bookings():
+    return jsonify(get_all())
 
-# =========================
-# 📁 STATIC FILES (FIX FOR LOGO)
-# =========================
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-app.router.add_static(
-    '/static',
-    os.path.join(BASE_DIR, 'static'),
-    show_index=True
-)
+# -------------------------
+# ADMIN PAGE (QR SCANNER)
+# -------------------------
+@app.route("/admin")
+def admin():
+    return render_template("admin.html")
 
-# =========================
-# 🌐 RUN SERVER (RENDER SAFE)
-# =========================
-PORT = int(os.environ.get("PORT", 8080))
 
 if __name__ == "__main__":
-    web.run_app(app, host="0.0.0.0", port=PORT)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)

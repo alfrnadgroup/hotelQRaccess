@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QRswoopAccess</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: white;
+      display: flex;
+      justify-content: center;
+      padding: 30px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      text-align: center;
+    }
+
+    /* HEADER */
+    .header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .header img {
+      width: 110px;
+      margin-bottom: 10px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: 1px;
+    }
+
+    /* FORM */
+    .form-card {
+      background: white;
+      color: black;
+      padding: 20px;
+      border-radius: 14px;
+    }
+
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 6px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      background: #2c5364;
+      color: white;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    /* QR CARD */
+    .qr-card {
+      width: 340px;
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #7b1fa2, #512da8);
+      display: none;
+      text-align: center;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+    }
+
+    /* COMBINED LOGO + QR */
+    .qr-combined {
+      background: white;
+      padding: 20px 20px 15px;
+      border-radius: 20px;
+      display: inline-block;
+
+      box-shadow:
+        0 20px 40px rgba(0,0,0,0.4),
+        inset 0 3px 10px rgba(0,0,0,0.1);
+
+      transform: perspective(900px) rotateX(6deg);
+    }
+
+    .qr-logo {
+      width: 70px;
+      display: block;
+      margin: 0 auto 10px;
+      filter: drop-shadow(0px 5px 5px rgba(0,0,0,0.3));
+    }
+
+    .qr-image {
+      width: 190px;
+      display: block;
+      filter: drop-shadow(0px 10px 10px rgba(0,0,0,0.25));
+    }
+
+    /* ROOM TEXT */
+    .room-text {
+      margin-top: 18px;
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    .download-btn {
+      background: #ff9800;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <img id="logoImg">
+    <h1>QRswoopAccess</h1>
+    <p>Smart Hotel QR Access System</p>
+  </div>
+
+  <!-- FORM (ALL DATA KEPT) -->
+  <div class="form-card">
+
+    <input id="room" placeholder="Room Number (e.g. 512)" />
+    <input id="name" placeholder="Guest Name" />
+    <input id="guest_id" placeholder="Guest ID" />
+    <input id="checkin" type="datetime-local" />
+    <input id="checkout" type="datetime-local" />
+
+    <button onclick="generateQR()">Generate QR Card</button>
+
+  </div>
+
+  <!-- QR CARD -->
+  <div id="qrCard" class="qr-card">
+
+    <!-- COMBINED BLOCK -->
+    <div class="qr-combined">
+      <img id="cardLogo" class="qr-logo">
+      <img id="qrImg" class="qr-image">
+    </div>
+
+    <!-- ROOM ONLY -->
+    <div class="room-text">
+      Room <span id="roomText"></span>
+    </div>
+
+  </div>
+
+  <button class="download-btn" onclick="downloadPDF()">Download QR Card PDF</button>
+
+</div>
+
+<script>
+
+const logoPath = "/static/logo.png";
+
+/* SET LOGOS */
+document.getElementById("logoImg").src = logoPath;
+document.getElementById("cardLogo").src = logoPath;
+
+function generateQR() {
+
+    const payload = {
+        room: room.value,
+        name: name.value,
+        guest_id: guest_id.value,
+        checkin: checkin.value,
+        checkout: checkout.value
+    };
+
+    /* FULL DATA INSIDE QR */
+    qrImg.src = "/generate_qr?data=" + encodeURIComponent(JSON.stringify(payload));
+
+    /* DISPLAY ONLY ROOM */
+    roomText.innerText = payload.room;
+
+    qrCard.style.display = "block";
+}
+
+async function downloadPDF() {
+
+    const card = document.getElementById("qrCard");
+
+    const images = card.getElementsByTagName("img");
+
+    await Promise.all([...images].map(img => {
+        if (img.complete) return;
+        return new Promise(resolve => {
+            img.onload = img.onerror = resolve;
+        });
+    }));
+
+    const canvas = await html2canvas(card, {
+        useCORS: true,
+        scale: 2
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    pdf.addImage(imgData, "PNG", 15, 20, 180, 180);
+    pdf.save("QRswoopAccess-card.pdf");
+}
+
+</script>
+
+</body>
+</html>
