@@ -7,9 +7,8 @@ from utils.qr import generate_qr_image
 
 routes = web.RouteTableDef()
 
-
 # =========================
-# 🏠 HOME PAGE
+# HOME
 # =========================
 @routes.get('/')
 async def index(request):
@@ -17,10 +16,11 @@ async def index(request):
 
 
 # =========================
-# 🧾 GENERATE QR
+# GENERATE QR
 # =========================
 @routes.get('/generate_qr')
 async def generate_qr(request):
+
     data = request.query.get("data")
 
     if not data:
@@ -33,16 +33,17 @@ async def generate_qr(request):
 
 
 # =========================
-# 🔐 VERIFY QR (future door system)
+# VERIFY QR (ADMIN SCANNER)
 # =========================
 @routes.post('/verify')
 async def verify(request):
+
     try:
         body = await request.json()
         token = body.get("token")
 
         if not token:
-            return web.json_response({"error": "missing token"}, status=400)
+            return web.json_response({"valid": False, "error": "missing token"})
 
         valid, decoded = verify_token(token)
 
@@ -59,26 +60,32 @@ async def verify(request):
 
 
 # =========================
-# 🚀 APP SETUP
+# ADMIN PAGE (SCANNER UI)
+# =========================
+@routes.get('/admin')
+async def admin(request):
+    return web.FileResponse('./templates/admin.html')
+
+
+# =========================
+# APP SETUP
 # =========================
 app = web.Application()
 app.add_routes(routes)
 
-# =========================
-# 📁 STATIC FILES (FIX FOR LOGO)
-# =========================
+# STATIC FILES (LOGO FIX)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app.router.add_static(
     '/static',
     os.path.join(BASE_DIR, 'static'),
-    show_index=True
+    show_index=False
 )
 
-# =========================
-# 🌐 RUN SERVER (RENDER SAFE)
-# =========================
-PORT = int(os.environ.get("PORT", 8080))
 
+# =========================
+# RUN (RENDER SAFE)
+# =========================
 if __name__ == "__main__":
-    web.run_app(app, host="0.0.0.0", port=PORT)
+    port = int(os.environ.get("PORT", 8080))
+    web.run_app(app, host="0.0.0.0", port=port)
