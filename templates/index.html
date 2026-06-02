@@ -214,12 +214,12 @@ document.getElementById("cardLogo").src = logoPath;
 async function generateQR() {
 
   const payload = {
-    room: document.getElementById("room").value,
-    name: document.getElementById("name").value,
-    guest_id: document.getElementById("guest_id").value,
-    checkin: document.getElementById("checkin").value,
-    checkout: document.getElementById("checkout").value
-  };
+  room: document.getElementById("room").value,
+  name: document.getElementById("name").value,
+  phone: document.getElementById("phone").value,
+  checkin: document.getElementById("checkin").value,
+  checkout: document.getElementById("checkout").value
+};
 
   const qrImg =
     document.getElementById("qrImg");
