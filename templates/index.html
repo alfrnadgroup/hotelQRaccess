@@ -145,46 +145,63 @@ button {
 
 <div class="container">
 
-<!-- HEADER (RESTORED) -->
-<div class="header">
-  <img src="/static/logo.png" alt="logo">
-  <h1>QRswoopAccess</h1>
-  <p>Smart QR Access System</p>
-</div>
+  <!-- HEADER -->
+  <div class="header">
+    <img src="/static/logo.png" alt="logo">
+    <h1>QRswoopAccess</h1>
+    <p>Smart QR Access System</p>
+  </div>
 
-<!-- FORM -->
-<div class="form-card">
-  <input id="room" placeholder="Room & Event (e.g. 512)" />
-  <input id="name" placeholder="Guest Name" />
-  <input id="guest_id" placeholder="Guest ID" />
-  <input id="checkin" type="datetime-local" />
-  <input id="checkout" type="datetime-local" />
+  <!-- FORM -->
+  <div class="form-card">
 
-  <button onclick="generateQR()">Generate QR Card</button>
-</div>
+    <input id="room" placeholder="Room & Event (e.g. 512)" />
 
-<!-- QR CARD -->
-<div id="qrCard" class="qr-card">
+    <input id="name" placeholder="Guest Name" />
 
-  <div class="qr-stack">
+    <input id="guest_id" placeholder="Guest ID" />
 
-    <div class="logo-box">
-      <img id="cardLogo">
+    <input
+      id="phone"
+      placeholder="WhatsApp Number (e.g. 96891234567)"
+    />
+
+    <input id="checkin" type="datetime-local" />
+
+    <input id="checkout" type="datetime-local" />
+
+    <button onclick="generateQR()">
+      Generate QR Card
+    </button>
+
+  </div>
+
+  <!-- QR CARD -->
+  <div id="qrCard" class="qr-card">
+
+    <div class="qr-stack">
+
+      <div class="logo-box">
+        <img id="cardLogo">
+      </div>
+
+      <div class="qr-box">
+        <img id="qrImg">
+      </div>
+
     </div>
 
-    <div class="qr-box">
-      <img id="qrImg">
+    <div class="room-text">
+      Room&Event <span id="roomText"></span>
     </div>
 
   </div>
 
-  <div class="room-text">
-    Room&Event <span id="roomText"></span>
-  </div>
-
-</div>
-
-<button class="download-btn" onclick="downloadPDF()">Download PDF</button>
+  <button
+    class="download-btn"
+    onclick="downloadPDF()">
+    Download PDF
+  </button>
 
 </div>
 
@@ -192,36 +209,164 @@ button {
 
 const logoPath = "/static/logo.png";
 
-cardLogo.src = logoPath;
+document.getElementById("cardLogo").src = logoPath;
 
-function generateQR() {
+async function generateQR() {
 
   const payload = {
-    room: room.value,
-    name: name.value,
-    guest_id: guest_id.value,
-    checkin: checkin.value,
-    checkout: checkout.value
+    room: document.getElementById("room").value,
+    name: document.getElementById("name").value,
+    guest_id: document.getElementById("guest_id").value,
+    checkin: document.getElementById("checkin").value,
+    checkout: document.getElementById("checkout").value
   };
 
-  qrImg.src = "/generate_qr?data=" + encodeURIComponent(JSON.stringify(payload));
-  roomText.innerText = payload.room;
+  const qrImg =
+    document.getElementById("qrImg");
+
+  const qrCard =
+    document.getElementById("qrCard");
+
+  qrImg.src =
+    "/generate_qr?data=" +
+    encodeURIComponent(
+      JSON.stringify(payload)
+    );
+
+  document.getElementById(
+    "roomText"
+  ).innerText = payload.room;
 
   qrCard.style.display = "block";
+
+  qrImg.onload = async () => {
+
+    try {
+
+      const canvas =
+        await html2canvas(
+          qrCard,
+          { scale: 2 }
+        );
+
+      const imgData =
+        canvas.toDataURL("image/png");
+
+      const { jsPDF } =
+        window.jspdf;
+
+      const pdf =
+        new jsPDF();
+
+      pdf.addImage(
+        imgData,
+        "PNG",
+        15,
+        20,
+        180,
+        180
+      );
+
+      const pdfBlob =
+        pdf.output("blob");
+
+      const formData =
+        new FormData();
+
+      formData.append(
+        "pdf",
+        pdfBlob,
+        "QRswoopAccess-card.pdf"
+      );
+
+      formData.append(
+        "phone",
+        document
+          .getElementById("phone")
+          .value
+      );
+
+      const response =
+        await fetch(
+          "/send_whatsapp_pdf",
+          {
+            method: "POST",
+            body: formData
+          }
+        );
+
+      const result =
+        await response.json();
+
+      if (result.success) {
+
+        alert(
+          "PDF sent to WhatsApp successfully"
+        );
+
+      } else {
+
+        alert(
+          "WhatsApp error: " +
+          (result.error || "Unknown error")
+        );
+      }
+
+    } catch (err) {
+
+      console.error(err);
+
+      alert(
+        "Failed to send PDF to WhatsApp"
+      );
+    }
+
+  };
+
 }
 
 async function downloadPDF() {
 
-  const card = document.getElementById("qrCard");
+  const card =
+    document.getElementById("qrCard");
 
-  const canvas = await html2canvas(card, { scale: 2 });
-  const imgData = canvas.toDataURL("image/png");
+  if (
+    card.style.display === "none"
+  ) {
+    alert(
+      "Generate a QR Card first."
+    );
+    return;
+  }
 
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF();
+  const canvas =
+    await html2canvas(
+      card,
+      { scale: 2 }
+    );
 
-  pdf.addImage(imgData, "PNG", 15, 20, 180, 180);
-  pdf.save("QRswoopAccess-card.pdf");
+  const imgData =
+    canvas.toDataURL("image/png");
+
+  const { jsPDF } =
+    window.jspdf;
+
+  const pdf =
+    new jsPDF();
+
+  pdf.addImage(
+    imgData,
+    "PNG",
+    15,
+    20,
+    180,
+    180
+  );
+
+  pdf.save(
+    "QRswoopAccess-card.pdf"
+  );
+
 }
 
 </script>
