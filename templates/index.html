@@ -153,31 +153,26 @@ button {
   </div>
 
   <!-- FORM -->
-  <div class="form-card">
+<div class="form-card">
 
-    <input id="room" placeholder="Room & Event (e.g. 512)" />
+  <input id="room" placeholder="Room & Event (e.g. 512)" />
 
-    <input id="name" placeholder="Guest Name" />
+  <input id="name" placeholder="Guest Name" />
 
-    <input
-  id="phone"
-  placeholder="WhatsApp Number (e.g. 96891234567)"
-/>
+  <input
+    id="phone"
+    placeholder="WhatsApp Number (e.g. 96891234567)"
+  />
 
-    <input
-      id="phone"
-      placeholder="WhatsApp Number (e.g. 96891234567)"
-    />
+  <input id="checkin" type="datetime-local" />
 
-    <input id="checkin" type="datetime-local" />
+  <input id="checkout" type="datetime-local" />
 
-    <input id="checkout" type="datetime-local" />
+  <button onclick="generateQR()">
+    Generate QR Card
+  </button>
 
-    <button onclick="generateQR()">
-      Generate QR Card
-    </button>
-
-  </div>
+</div>
 
   <!-- QR CARD -->
   <div id="qrCard" class="qr-card">
