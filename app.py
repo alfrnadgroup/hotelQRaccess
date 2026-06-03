@@ -53,7 +53,7 @@ async def generate_qr(request):
 @routes.post('/send_whatsapp_pdf')
 async def send_whatsapp_pdf(request):
 
-```
+
 temp_file = None
 
 try:
