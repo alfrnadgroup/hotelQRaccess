@@ -52,80 +52,58 @@ async def generate_qr(request):
 
 @routes.post('/send_whatsapp_pdf')
 async def send_whatsapp_pdf(request):
-
-
 temp_file = None
-
 try:
-
     reader = await request.multipart()
-
     pdf_part = await reader.next()
-
     if not pdf_part:
         return web.json_response({
             "success": False,
             "error": "PDF missing"
         }, status=400)
-
     pdf_bytes = await pdf_part.read()
-
     phone_part = await reader.next()
-
     if not phone_part:
         return web.json_response({
             "success": False,
             "error": "Phone missing"
         }, status=400)
-
     phone = (await phone_part.text()).strip()
-
     print("=" * 50)
     print("PHONE:", phone)
     print("PDF SIZE:", len(pdf_bytes))
     print("=" * 50)
-
     temp_file = tempfile.NamedTemporaryFile(
         delete=False,
         suffix=".pdf"
     )
-
     temp_file.write(pdf_bytes)
     temp_file.close()
-
     headers = {
         "Authorization": f"Bearer {WHATSAPP_TOKEN}"
     }
-
     async with aiohttp.ClientSession() as session:
-
         upload_data = aiohttp.FormData()
-
         upload_data.add_field(
             "messaging_product",
             "whatsapp"
         )
-
         upload_data.add_field(
             "file",
             open(temp_file.name, "rb"),
             filename="QRswoopAccess-card.pdf",
             content_type="application/pdf"
         )
-
         upload_url = (
             f"https://graph.facebook.com/v23.0/"
             f"{PHONE_NUMBER_ID}/media"
         )
-
         async with session.post(
             upload_url,
             headers=headers,
             data=upload_data
         ) as upload_response:
-
             upload_status = upload_response.status
-
             try:
                 upload_result = await upload_response.json()
             except:
@@ -133,17 +111,13 @@ try:
 
             print("UPLOAD STATUS:", upload_status)
             print("UPLOAD RESULT:", upload_result)
-
         if not isinstance(upload_result, dict) or "id" not in upload_result:
             return web.json_response({
                 "success": False,
                 "error": upload_result
             }, status=400)
-
         media_id = upload_result["id"]
-
         print("MEDIA ID:", media_id)
-
         message_payload = {
             "messaging_product": "whatsapp",
             "to": phone,
@@ -153,12 +127,10 @@ try:
                 "filename": "QRswoopAccess-card.pdf"
             }
         }
-
         send_url = (
             f"https://graph.facebook.com/v23.0/"
             f"{PHONE_NUMBER_ID}/messages"
         )
-
         async with session.post(
             send_url,
             headers={
@@ -183,35 +155,23 @@ try:
                 "success": False,
                 "error": send_result
             }, status=400)
-
     return web.json_response({
         "success": True,
         "result": send_result
     })
-
 except Exception as e:
-
     print("EXCEPTION:", str(e))
-
     return web.json_response({
         "success": False,
         "error": str(e)
     }, status=500)
-
 finally:
 
     if temp_file:
         try:
             os.remove(temp_file.name)
         except:
-            pass
-
-
-
-
-       
-            
-
+            pass      
 # =========================
 # VERIFY QR (ADMIN SCANNER)
 # =========================
