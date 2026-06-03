@@ -66,20 +66,20 @@ async def send_whatsapp_pdf(request):
                 "error": "PDF missing"
             }, status=400)
 
-        pdf_bytes = await pdf_part.read()
+                pdf_bytes = await pdf_part.read()
 
-pdf_size_mb = len(pdf_bytes) / (1024 * 1024)
+        pdf_size_mb = len(pdf_bytes) / (1024 * 1024)
 
-print("=" * 50)
-print("PDF SIZE BYTES:", len(pdf_bytes))
-print("PDF SIZE MB:", round(pdf_size_mb, 2))
-print("=" * 50)
+        print("=" * 50)
+        print("PDF SIZE BYTES:", len(pdf_bytes))
+        print("PDF SIZE MB:", round(pdf_size_mb, 2))
+        print("=" * 50)
 
-if pdf_size_mb > 10:
-    return web.json_response({
-        "success": False,
-        "error": f"PDF too large ({pdf_size_mb:.2f} MB)"
-    }, status=400)
+        if pdf_size_mb > 10:
+            return web.json_response({
+                "success": False,
+                "error": f"PDF too large ({pdf_size_mb:.2f} MB)"
+            }, status=400)
 
         phone_part = await reader.next()
 
